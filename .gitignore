@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Django
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
+*.log
+
+# Ortam değişkenleri
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Geçici dosyalar
+mac_detay.html
+maclar_page.html
+tbf_app.js
+ep_resp.txt
+leagues_raw.json
+*.html
+!tracker/templates/**/*.html
+
+# Claude
+.claude/
+
+# Railway / deployment
+*.pid

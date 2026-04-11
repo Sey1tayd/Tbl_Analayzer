@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBF Hakem Takip Sistemi</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --orange: #e8500a;
+            --orange-dark: #c43e06;
+            --navy: #0d1b2a;
+            --navy-mid: #1a2f47;
+            --navy-light: #243c57;
+            --white: #ffffff;
+            --gray-bg: #f4f6f9;
+            --gray-border: #dde3ea;
+            --gray-text: #6b7a90;
+            --green: #28a745;
+            --red: #dc3545;
+            --shadow: 0 2px 8px rgba(0,0,0,.12);
+            --radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--gray-bg);
+            color: var(--navy);
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.3);
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--white);
+        }
+        .header-brand .logo-badge {
+            background: var(--orange);
+            color: white;
+            font-weight: 800;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+        .header-brand h1 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
+            text-decoration: none;
+        }
+        .btn-primary   { background: var(--orange); color: white; }
+        .btn-primary:hover { background: var(--orange-dark); }
+        .btn-outline   { background: transparent; color: white; border: 1px solid rgba(255,255,255,.4); }
+        .btn-outline:hover { background: rgba(255,255,255,.1); }
+        .btn-sm        { padding: 5px 10px; font-size: 12px; }
+        .btn-success   { background: var(--green); color: white; }
+        .btn-success:hover { filter: brightness(.9); }
+
+        /* ── MESSAGES ── */
+        .messages { padding: 10px 24px 0; }
+        .alert {
+            padding: 10px 16px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+        }
+        .alert-success { background: #d4edda; border-color: var(--green); color: #155724; }
+        .alert-error   { background: #f8d7da; border-color: var(--red);   color: #721c24; }
+        .alert-warning { background: #fff3cd; border-color: #ffc107;       color: #856404; }
+
+        /* ── MAIN LAYOUT ── */
+        main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+        /* ── STATS BAR ── */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 14px 18px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border-top: 3px solid var(--gray-border);
+            transition: border-color .2s;
+        }
+        .stat-card.active { border-top-color: var(--orange); }
+        .stat-card .stat-label { font-size: 11px; font-weight: 600; color: var(--gray-text); text-transform: uppercase; letter-spacing: .5px; }
+        .stat-card .stat-count { font-size: 28px; font-weight: 800; color: var(--navy); }
+        .stat-card .stat-league { font-size: 13px; font-weight: 700; color: var(--orange); }
+        .stat-card .stat-sync {
+            font-size: 11px;
+            color: var(--gray-text);
+            margin-top: 2px;
+        }
+        .stat-card .stat-sync .dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        .dot-green { background: var(--green); }
+        .dot-red   { background: var(--red); }
+        .dot-gray  { background: var(--gray-text); }
+
+        /* ── LEAGUE TABS ── */
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            background: white;
+            padding: 6px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--gray-text);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .tab:hover { background: var(--gray-bg); color: var(--navy); }
+        .tab.active { background: var(--orange); color: white; box-shadow: 0 2px 8px rgba(232,80,10,.35); }
+        .tab .tab-badge {
+            background: rgba(255,255,255,.25);
+            font-size: 11px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        .tab:not(.active) .tab-badge { background: var(--gray-bg); color: var(--gray-text); }
+
+        /* ── FILTER BAR ── */
+        .filter-bar {
+            background: white;
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .filter-bar label { font-size: 12px; font-weight: 600; color: var(--gray-text); white-space: nowrap; }
+        .filter-bar input[type="text"],
+        .filter-bar input[type="date"] {
+            border: 1px solid var(--gray-border);
+            border-radius: 6px;
+            padding: 7px 11px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color .15s;
+            background: var(--gray-bg);
+        }
+        .filter-bar input:focus { border-color: var(--orange); background: white; }
+        .filter-bar input[type="text"] { min-width: 220px; }
+        .filter-bar .filter-sep { color: var(--gray-border); }
+        .scrape-controls { margin-left: auto; display: flex; gap: 8px; }
+
+        /* ── CONTENT AREA ── */
+        .content-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .content-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+        .content-header .match-count {
+            font-size: 12px;
+            color: var(--gray-text);
+            background: var(--gray-bg);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* ── WEEK GROUP ── */
+        .week-group { margin-bottom: 20px; }
+        .week-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding: 8px 14px;
+            background: var(--navy-mid);
+            color: white;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .week-header .week-count {
+            background: rgba(255,255,255,.15);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        /* ── MATCH TABLE ── */
+        .match-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .match-table thead tr {
+            background: var(--gray-bg);
+            border-bottom: 2px solid var(--gray-border);
+        }
+        .match-table th {
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--gray-text);
+            text-align: left;
+        }
+        .match-table td {
+            padding: 12px 14px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--gray-border);
+            vertical-align: middle;
+        }
+        .match-table tr:last-child td { border-bottom: none; }
+        .match-table tr:hover td { background: #fef9f6; }
+
+        /* date cell */
+        .cell-date { white-space: nowrap; }
+        .date-day   { font-weight: 700; font-size: 14px; color: var(--navy); }
+        .date-month { font-size: 11px; color: var(--gray-text); }
+        .date-time  { font-size: 12px; color: var(--orange); font-weight: 600; }
+
+        /* teams cell */
+        .cell-teams { min-width: 260px; }
+        .teams-row { display: flex; align-items: center; gap: 8px; }
+        .team-name { font-weight: 600; }
+        .vs-badge {
+            background: var(--gray-bg);
+            color: var(--gray-text);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* score */
+        .score-badge {
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--navy);
+            background: var(--gray-bg);
+            padding: 3px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        .score-badge.pending { color: var(--gray-text); font-size: 12px; }
+
+        /* referee tags */
+        .referees-cell { min-width: 200px; }
+        .ref-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+        .ref-tag {
+            background: #eef3fb;
+            color: #2c4d8a;
+            font-size: 12px;
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .ref-tag.role-1 { background: #fff0e6; color: #8b3a00; }
+        .ref-tag.role-2 { background: #eefaf0; color: #145a1f; }
+        .ref-tag.role-3 { background: #f0f0ff; color: #2a2a8b; }
+        .no-refs { color: var(--gray-text); font-style: italic; font-size: 12px; }
+
+        /* venue */
+        .venue-text { font-size: 12px; color: var(--gray-text); }
+
+        /* empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--navy); }
+        .empty-state p  { color: var(--gray-text); font-size: 14px; margin-bottom: 20px; }
+
+        /* scrape status row */
+        .scrape-status {
+            font-size: 11px;
+            color: var(--gray-text);
+        }
+
+        @media (max-width: 900px) {
+            .stats-bar { grid-template-columns: repeat(2,1fr); }
+            .cell-venue, th:nth-child(5) { display: none; }
+        }
+        @media (max-width: 600px) {
+            .stats-bar { grid-template-columns: 1fr 1fr; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-brand">
+        <span class="logo-badge">TBF</span>
+        <h1>Hakem Takip Sistemi</h1>
+    </div>
+    <div class="header-actions">
+        <form method="post" action="{% url 'scrape_all' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-sm">
+                &#8635; Tümünü Güncelle
+            </button>
+        </form>
+        <a href="/admin/" class="btn btn-outline btn-sm">Admin</a>
+    </div>
+</header>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main>
+    <!-- Stats Cards -->
+    <div class="stats-bar">
+        {% for code, label in leagues %}
+        <a href="?league={{ code }}" style="text-decoration:none">
+        <div class="stat-card {% if code == active_league %}active{% endif %}">
+            <span class="stat-league">{{ code }}</span>
+            <span class="stat-count">{{ league_counts|default_if_none:"0" }}</span>
+            <span class="stat-label">{{ label }}</span>
+            <span class="stat-sync">
+                {% for k, v in last_scrape.items %}{% if k == code %}{% if v %}<span class="dot {% if v.success %}dot-green{% else %}dot-red{% endif %}"></span>{{ v.scraped_at|date:"d.m H:i" }}{% else %}<span class="dot dot-gray"></span> Bekleniyor{% endif %}{% endif %}{% endfor %}
+            </span>
+        </div>
+        </a>
+        {% endfor %}
+    </div>
+    <script>
+    // Her kart için doğru sayıyı set et
+    const _counts = { {% for code, label in leagues %}'{{ code }}': {% for k,v in league_counts.items %}{% if k == code %}{{ v }}{% endif %}{% endfor %}, {% endfor %} };
+    document.querySelectorAll('.stat-card').forEach(card => {
+        const code = card.querySelector('.stat-league').textContent.trim();
+        if (_counts[code] !== undefined) card.querySelector('.stat-count').textContent = _counts[code];
+    });
+    </script>
+
+    <!-- Custom stats count per tab -->
+    <!-- League Tabs -->
+    <div class="tab-bar">
+        {% for code, label in leagues %}
+        <a href="?league={{ code }}{% if search %}&search={{ search }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+           class="tab {% if code == active_league %}active{% endif %}">
+            {{ code }}
+            <span class="tab-badge">
+                {% for k, v in league_counts.items %}{% if k == code %}{{ v }}{% endif %}{% endfor %}
+            </span>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="get" class="filter-bar">
+        <input type="hidden" name="league" value="{{ active_league }}">
+        <label>Ara:</label>
+        <input type="text" name="search" value="{{ search }}" placeholder="Takım veya hakem adı...">
+        <span class="filter-sep">|</span>
+        <label>Tarih:</label>
+        <input type="date" name="date_from" value="{{ date_from }}">
+        <span>—</span>
+        <input type="date" name="date_to" value="{{ date_to }}">
+        <button type="submit" class="btn btn-primary btn-sm">Filtrele</button>
+        {% if search or date_from or date_to %}
+        <a href="?league={{ active_league }}" class="btn btn-sm" style="background:var(--gray-bg);color:var(--navy);">Temizle</a>
+        {% endif %}
+
+        <div class="scrape-controls">
+            <form method="post" action="{% url 'scrape_league' active_league %}" style="margin:0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-sm">&#8635; {{ active_league }} Güncelle</button>
+            </form>
+        </div>
+    </form>
+
+    <!-- Content -->
+    <div class="content-header">
+        <h2>
+            {% for code, label in leagues %}{% if code == active_league %}{{ label }}{% endif %}{% endfor %}
+        </h2>
+        <span class="match-count">{{ total_matches }} maç</span>
+    </div>
+
+    {% if matches_by_week %}
+        {% for week, matches in matches_by_week.items %}
+        <div class="week-group">
+            <div class="week-header">
+                <span>{{ week }}</span>
+                <span class="week-count">{{ matches|length }} maç</span>
+            </div>
+            <table class="match-table">
+                <thead>
+                    <tr>
+                        <th>Tarih / Saat</th>
+                        <th>Maç</th>
+                        <th>Skor</th>
+                        <th>Hakemler</th>
+                        <th>Salon</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for match in matches %}
+                    <tr>
+                        <td class="cell-date">
+                            {% if match.match_date %}
+                            <div class="date-day">{{ match.match_date|date:"d" }} {{ match.match_date|date:"M" }}</div>
+                            <div class="date-month">{{ match.match_date|date:"Y" }}</div>
+                            <div class="date-time">{{ match.match_date|date:"H:i" }}</div>
+                            {% else %}
+                            <span style="color:var(--gray-text); font-style:italic; font-size:12px;">Tarih yok</span>
+                            {% endif %}
+                        </td>
+                        <td class="cell-teams">
+                            <div class="teams-row">
+                                <span class="team-name">{{ match.home_team }}</span>
+                                <span class="vs-badge">VS</span>
+                                <span class="team-name">{{ match.away_team }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if match.score %}
+                            <span class="score-badge">{{ match.score }}</span>
+                            {% else %}
+                            <span class="score-badge pending">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="referees-cell">
+                            {% with refs=match.matchreferee_set.all %}
+                            {% if refs %}
+                            <div class="ref-tags">
+                                {% for mr in refs %}
+                                <span class="ref-tag role-{{ mr.role }}">
+                                    {{ mr.referee.name }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <span class="no-refs">Hakem atanmadı</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="cell-venue">
+                            <span class="venue-text">{{ match.venue|default:"—" }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏀</div>
+            <h3>Henüz maç verisi yok</h3>
+            <p>{{ active_league }} ligi için veri çekmek üzere aşağıdaki butona tıklayın.</p>
+            <form method="post" action="{% url 'scrape_league' active_league %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">&#8635; {{ active_league }} Verilerini Çek</button>
+            </form>
+        </div>
+    {% endif %}
+</main>
+
+</body>
+</html>
