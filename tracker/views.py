@@ -27,11 +27,21 @@ def _save_match_list(league_code, match_list):
             tbf_match_id=match_id,
             defaults={**m},
         )
-        for ref_name in refs:
+        # refs: [{"name": str, "role": "1"|"2"|"3"|"commissioner"}, ...]
+        for ref in refs:
+            if isinstance(ref, dict):
+                ref_name = (ref.get('name') or '').strip()
+                ref_role = ref.get('role', '1')
+            else:
+                ref_name = str(ref).strip()
+                ref_role = '1'
             if not ref_name:
                 continue
             ref_obj, _ = Referee.objects.get_or_create(name=ref_name)
-            MatchReferee.objects.get_or_create(match=obj, referee=ref_obj)
+            MatchReferee.objects.update_or_create(
+                match=obj, referee=ref_obj,
+                defaults={'role': ref_role},
+            )
         saved += 1
     return saved
 

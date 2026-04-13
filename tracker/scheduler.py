@@ -32,11 +32,20 @@ def run_full_scrape():
                     tbf_match_id=match_id,
                     defaults={**m},
                 )
-                for ref_name in refs:
+                for ref in refs:
+                    if isinstance(ref, dict):
+                        ref_name = (ref.get('name') or '').strip()
+                        ref_role = ref.get('role', '1')
+                    else:
+                        ref_name = str(ref).strip()
+                        ref_role = '1'
                     if not ref_name:
                         continue
                     ref_obj, _ = Referee.objects.get_or_create(name=ref_name)
-                    MatchReferee.objects.get_or_create(match=obj, referee=ref_obj)
+                    MatchReferee.objects.update_or_create(
+                        match=obj, referee=ref_obj,
+                        defaults={'role': ref_role},
+                    )
                 saved += 1
 
             ScrapeLog.objects.create(
