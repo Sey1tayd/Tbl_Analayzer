@@ -8,8 +8,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ── Güvenlik ──────────────────────────────────────────────────────────────────
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-z7j1zwg)9hx_3k)dr_ecyn84szn4x&e8kiam(@p8t4azs87he8')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
-CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',') if config('CSRF_TRUSTED_ORIGINS', default='') else []
+_allowed_hosts_raw = config('ALLOWED_HOSTS', default='*')
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_raw.split(',') if h.strip()]
+
+_csrf_raw = config('CSRF_TRUSTED_ORIGINS', default='')
+if _csrf_raw:
+    CSRF_TRUSTED_ORIGINS = [h.strip() for h in _csrf_raw.split(',') if h.strip()]
+else:
+    # ALLOWED_HOSTS'tan otomatik türet (Railway, Heroku vb. için)
+    CSRF_TRUSTED_ORIGINS = [
+        f'https://{h}' for h in ALLOWED_HOSTS
+        if h not in ('*', 'localhost', '127.0.0.1', '')
+    ]
 
 # ── Uygulamalar ───────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
