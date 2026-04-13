@@ -15,10 +15,15 @@ _csrf_raw = config('CSRF_TRUSTED_ORIGINS', default='')
 if _csrf_raw:
     CSRF_TRUSTED_ORIGINS = [h.strip() for h in _csrf_raw.split(',') if h.strip()]
 else:
-    # ALLOWED_HOSTS'tan otomatik türet (Railway, Heroku vb. için)
-    CSRF_TRUSTED_ORIGINS = [
+    # ALLOWED_HOSTS'tan türet + Railway/Render wildcard'larını ekle
+    _derived = [
         f'https://{h}' for h in ALLOWED_HOSTS
         if h not in ('*', 'localhost', '127.0.0.1', '')
+    ]
+    CSRF_TRUSTED_ORIGINS = _derived + [
+        'https://*.railway.app',
+        'https://*.up.railway.app',
+        'https://*.onrender.com',
     ]
 
 # ── Uygulamalar ───────────────────────────────────────────────────────────────
